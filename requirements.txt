@@ -2,3 +2,4 @@ flask
 gunicorn
 kik
 yahoo_finance
+requests
