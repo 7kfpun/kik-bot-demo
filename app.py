@@ -117,7 +117,7 @@ def webhook():
                             text = 'What are you looking for?'
                             send_text(message.from_user, message.chat_id, text)
 
-            elif 'lookup' in message.body:
+            elif 'lookup' in message.body.lower():
                 lookup_text = re.findall(r'lookup (\w+)', message.body.lower())
                 if lookup_text:
                     text = 'Are you looking for...'
