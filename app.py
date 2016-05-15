@@ -128,9 +128,12 @@ def webhook():
                     send_text(message.from_user, message.chat_id, text)
             else:
                 text = 'Hi {}! For live stock quotes type "$" followed by a ticker symbol.'.format(message.from_user)
+                text = 'Hi! For live stock quotes type "$" followed by a ticker symbol or "lookup" followed by a company name.'  # noqa
                 send_text(message.from_user, message.chat_id, text)
-                text = 'For example, type "$aapl" for Apple.'
+                text = 'For example, if you want to look up Apple, type "$AAPL" or "lookup Apple".'
                 send_text(message.from_user, message.chat_id, text)
+                text = 'Try it now:'
+                send_text(message.from_user, message.chat_id, text, ["Lookup Apple"])
 
     return Response(status=200)
 
