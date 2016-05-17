@@ -2,9 +2,11 @@ import json
 import logging
 import os
 import re
+from datetime import datetime
 
 import requests
 from flask import Flask, Response, request
+from flask.ext.sqlalchemy import SQLAlchemy
 from kik import Configuration, KikApi
 from kik.messages import (LinkMessage, SuggestedResponseKeyboard, TextMessage,
                           TextResponse, messages_from_json)
@@ -18,8 +20,28 @@ kik = KikApi(BOT_USERNAME, BOT_API_KEY)
 kik.set_configuration(Configuration(webhook=BOT_WEBHOOK))
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 DEBUG = True
+
+
+class ChatRecord(db.Model):
+
+    """ChatRecord model."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    original = db.Column(db.Text)
+    created_datetime = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __init__(self, original):
+        """__init__."""
+        self.original = original
+
+    def __str__(self):
+        """__str__."""
+        return self.original
 
 
 def lookup(ticker):
@@ -85,6 +107,9 @@ def webhook():
         return Response(status=403)
 
     messages = messages_from_json(request.json['messages'])
+    chat_record = ChatRecord(json.dumps(request.json['messages']))
+    db.session.add(chat_record)
+    db.session.commit()
 
     for message in messages:
         if isinstance(message, TextMessage):

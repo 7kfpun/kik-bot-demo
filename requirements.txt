@@ -1,5 +1,8 @@
-flask
+Flask
+Flask-SQLAlchemy
+Werkzeug
 gunicorn
 kik
-yahoo_finance
+psycopg2
 requests
+yahoo_finance
