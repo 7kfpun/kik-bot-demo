@@ -90,26 +90,39 @@ def webhook():
         if isinstance(message, TextMessage):
             logging.info(message)
 
-            if '$' in message.body:
+            if '$' in message.body or '^' in message.body:
                 send_text(message.from_user, message.chat_id, 'Looking up...')
-                for symbol in re.findall(r'\$\w(?:\w)*(?:\.\w+)?', message.body):
-                    ticker = symbol[1:]
-                    yahoo = Share(ticker)
+                for symbol in re.findall(r'[\$\^]\w(?:\w)*(?:\.\w+)?', message.body):
+                    symbol = symbol[1:] if '$' in symbol else symbol
+
+                    yahoo = Share(symbol)
                     if yahoo.get_price():
-                        text = 'Price of ${} is {}'.format(ticker, yahoo.get_price())
+                        text = 'Price of {} is {}'.format(symbol, yahoo.get_price())
                         send_text(message.from_user, message.chat_id, text)
                         send_link(
                             message.from_user,
                             message.chat_id,
-                            url='http://finance.yahoo.com/q?s={}'.format(ticker),
-                            title='Yahoo finace: ${}'.format(ticker),
-                            pic_url='http://chart.finance.yahoo.com/z?s={}'.format(ticker),
+                            url='https://finance.yahoo.com/q?s={}'.format(symbol),
+                            title='Yahoo finace: {}'.format(symbol),
+                            pic_url='https://chart.finance.yahoo.com/z?s={}'.format(symbol),
+                        )
+                    elif '^' in symbol:
+                        send_link(
+                            message.from_user,
+                            message.chat_id,
+                            url='https://finance.yahoo.com/q?s={}'.format(symbol),
+                            title='Yahoo finace: {}'.format(symbol),
+                            pic_url='https://chart.finance.yahoo.com/z?s={}'.format(symbol),
                         )
                     else:
-                        text = 'We couldn\'t find a ticker with ${}.'.format(ticker)
+                        text = 'We couldn\'t find a ticker with {}.'.format(symbol)
                         send_text(message.from_user, message.chat_id, text)
 
-                        keyboards = ['$' + t['symbol'] for t in lookup(ticker)][:4]
+                        keyboards = [
+                            '$' + t['symbol']
+                            if '^' not in t['symbol'] else t['symbol']
+                            for t in lookup(symbol)
+                        ][:4]
                         if keyboards:
                             text = 'Are you looking for...'
                             send_text(message.from_user, message.chat_id, text, keyboards)
@@ -132,9 +145,11 @@ def webhook():
                 else:
                     text = 'I don\'t understand message'
                 send_text(message.from_user, message.chat_id, text)
-                text = 'For live stock quotes type "$" followed by a ticker symbol or "lookup" followed by a company name.'
+                text = 'For live stock quotes type "$" followed by a ticker symbol or "lookup" followed by a company name.'  # noqa
                 send_text(message.from_user, message.chat_id, text)
                 text = 'For example, if you want to look up Apple, type "$AAPL" or "lookup Apple".'
+                send_text(message.from_user, message.chat_id, text)
+                text = 'For index quotes, start with "^". For example, "^DJI" for Dow Jones Industrial Average.'
                 send_text(message.from_user, message.chat_id, text)
                 text = 'Try it now:'
                 send_text(message.from_user, message.chat_id, text, ["Lookup Apple"])
