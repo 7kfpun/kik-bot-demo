@@ -115,23 +115,16 @@ def webhook():
         if isinstance(message, TextMessage):
             logging.info(message)
 
-            if '$' in message.body or '^' in message.body:
+            if '$' in message.body:
                 send_text(message.from_user, message.chat_id, 'Looking up...')
-                for symbol in re.findall(r'[\$\^]\w(?:\w)*(?:\.\w+)?', message.body):
-                    symbol = symbol[1:] if '$' in symbol else symbol
+
+                for symbol in re.findall(r'\$\w(?:\w)*(?:\.\w+)?', message.body):
+                    symbol = symbol[1:]
 
                     yahoo = Share(symbol)
                     if yahoo.get_price():
                         text = 'Price of {} is {}'.format(symbol, yahoo.get_price())
                         send_text(message.from_user, message.chat_id, text)
-                        send_link(
-                            message.from_user,
-                            message.chat_id,
-                            url='https://finance.yahoo.com/q?s={}'.format(symbol),
-                            title='Yahoo finace: {}'.format(symbol),
-                            pic_url='https://chart.finance.yahoo.com/z?s={}'.format(symbol),
-                        )
-                    elif '^' in symbol:
                         send_link(
                             message.from_user,
                             message.chat_id,
@@ -155,6 +148,18 @@ def webhook():
                             text = 'What are you looking for?'
                             send_text(message.from_user, message.chat_id, text)
 
+            elif '^' in message.body:
+                send_text(message.from_user, message.chat_id, 'Looking up...')
+
+                for symbol in re.findall(r'\^\w(?:\w)*(?:\.\w+)?', message.body):
+                    send_link(
+                        message.from_user,
+                        message.chat_id,
+                        url='https://finance.yahoo.com/q?s={}'.format(symbol),
+                        title='Yahoo finace: {}'.format(symbol),
+                        pic_url='https://chart.finance.yahoo.com/z?s={}'.format(symbol),
+                    )
+
             elif 'lookup' in message.body.lower():
                 lookup_text = re.findall(r'lookup (\w+)', message.body.lower())
                 if lookup_text:
@@ -164,6 +169,7 @@ def webhook():
                 else:
                     text = 'What are you looking for?'
                     send_text(message.from_user, message.chat_id, text)
+
             else:
                 if 'hi' in message.body.lower() or 'hello' in message.body.lower():
                     text = 'Hi {}!'.format(message.from_user)
@@ -180,6 +186,7 @@ def webhook():
                 send_text(message.from_user, message.chat_id, text, ["Lookup Apple"])
 
     return Response(status=200)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
