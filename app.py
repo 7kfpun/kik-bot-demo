@@ -54,7 +54,7 @@ def send_text(user, chat_id, body, keyboards=[]):
         message.keyboards.append(
             SuggestedResponseKeyboard(
                 to=user,
-                hidden=True,
+                hidden=False,
                 responses=[TextResponse(keyboard) for keyboard in keyboards],
             )
         )
@@ -127,8 +127,12 @@ def webhook():
                     text = 'What are you looking for?'
                     send_text(message.from_user, message.chat_id, text)
             else:
-                text = 'Hi {}! For live stock quotes type "$" followed by a ticker symbol.'.format(message.from_user)
-                text = 'Hi! For live stock quotes type "$" followed by a ticker symbol or "lookup" followed by a company name.'  # noqa
+                if 'hi' in message.body.lower() or 'hello' in message.body.lower():
+                    text = 'Hi {}!'.format(message.from_user)
+                else:
+                    text = 'I don\'t understand message'
+                send_text(message.from_user, message.chat_id, text)
+                text = 'For live stock quotes type "$" followed by a ticker symbol or "lookup" followed by a company name.'
                 send_text(message.from_user, message.chat_id, text)
                 text = 'For example, if you want to look up Apple, type "$AAPL" or "lookup Apple".'
                 send_text(message.from_user, message.chat_id, text)
